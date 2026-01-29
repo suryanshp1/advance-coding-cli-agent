@@ -9,6 +9,7 @@ from ui.tui import get_console
 from pathlib import Path
 from config.loader import load_config
 from config.config import Config
+from utils.errors import ConfigError
 
 console = get_console()
 
