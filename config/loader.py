@@ -37,6 +37,7 @@ def _parse_toml(path: Path):
             config_file=str(path),
         ) from e
 
+
 def _get_agent_md_files(cwd: Path) -> Path | None:
     current = cwd.resolve()
 
@@ -45,8 +46,9 @@ def _get_agent_md_files(cwd: Path) -> Path | None:
         if agent_md_path.is_file():
             content = agent_md_path.read_text(encoding="utf-8")
             return content
-    
+
     return None
+
 
 def _get_project_config(cwd: Path) -> Path | None:
     current = cwd.resolve()
@@ -56,12 +58,13 @@ def _get_project_config(cwd: Path) -> Path | None:
         config_path = agent_dir / CONFIG_FILE_NAME
         if config_path.is_file():
             return config_path
-    
+
     parent = current.parent
     if parent != current:
         return _get_project_config(parent)
-    
+
     return None
+
 
 def _merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     result = base.copy()
@@ -72,6 +75,7 @@ def _merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, An
             result[key] = value
 
     return result
+
 
 def load_config(cwd: Path | None) -> Config:
     cwd = cwd or Path.cwd()
@@ -92,7 +96,7 @@ def load_config(cwd: Path | None) -> Config:
             config_dict = _merge_dicts(config_dict, project_config_dict)
         except ConfigError as e:
             logger.warning(f"Skipping invalid project config file {project_path}: {e}")
-    
+
     if "cwd" not in config_dict:
         config_dict["cwd"] = str(cwd)
 

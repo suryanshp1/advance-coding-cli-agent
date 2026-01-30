@@ -117,13 +117,13 @@ class CLI:
     help="Current working directory",
 )
 def main(prompt: str | None = None, cwd: Path | None = None):
-    
+
     try:
         config = load_config(cwd=cwd)
     except ConfigError as e:
         console.print(f"[error]Error: {e}[/error]")
         sys.exit(1)
-    
+
     # messages=[
     #     {"role": "user", "content": prompt}
     # ]
@@ -133,9 +133,9 @@ def main(prompt: str | None = None, cwd: Path | None = None):
         for error in errors:
             console.print(f"[error]{error}[/error]")
         sys.exit(1)
-    
+
     cli = CLI()
-    
+
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
