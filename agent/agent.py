@@ -9,9 +9,12 @@ from client.response import ToolCall, ToolResultMessage
 from pathlib import Path
 
 
+from config.config import Config
+
+
 class Agent:
-    def __init__(self):
-        self.llm_client = LLMClient()
+    def __init__(self, config: Config | None = None):
+        self.llm_client = LLMClient(config=config)
         self.context_manager = ContextManager()
         self.tool_registry = create_default_registry()
 

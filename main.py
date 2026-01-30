@@ -15,13 +15,13 @@ console = get_console()
 
 
 class CLI:
-    def __init__(self):
+    def __init__(self, config: Config):
         self.agent: Agent | None = None
         self.tui = TUI(console=console)
-        self.config = Config()
+        self.config = config
 
     async def run_single(self, message: str) -> str | None:
-        async with Agent() as agent:
+        async with Agent(config=self.config) as agent:
             self.agent = agent
             return await self._process_message(message)
 
@@ -34,7 +34,7 @@ class CLI:
                 "commands: /exit /help /config /approval /model",
             ],
         )
-        async with Agent() as agent:
+        async with Agent(config=self.config) as agent:
             self.agent = agent
 
             while True:
@@ -134,7 +134,7 @@ def main(prompt: str | None = None, cwd: Path | None = None):
             console.print(f"[error]{error}[/error]")
         sys.exit(1)
 
-    cli = CLI()
+    cli = CLI(config=config)
 
     if prompt:
         result = asyncio.run(cli.run_single(prompt))

@@ -14,10 +14,10 @@ import asyncio
 
 
 class LLMClient:
-    def __init__(self) -> None:
+    def __init__(self, config: Config | None = None) -> None:
         self._client: AsyncOpenAI | None = None
         self._max_retries: int = 3
-        self._config = Config()
+        self._config = config or Config()
 
     def get_client(self) -> AsyncOpenAI:
         if self._client is None:
