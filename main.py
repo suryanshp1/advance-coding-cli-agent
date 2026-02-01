@@ -53,7 +53,7 @@ class CLI:
         console.print("\n[dim]Goodbye![/dim]")
 
     def _get_tool_kind(self, tool_name: str) -> str | None:
-        tool = self.agent.tool_registry.get(tool_name)
+        tool = self.agent.session.tool_registry.get(tool_name)
         if not tool:
             return None
         return tool.kind.value
