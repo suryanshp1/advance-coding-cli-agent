@@ -33,3 +33,12 @@ def is_binary_file(path: str | Path) -> bool:
         return False
     except Exception:
         return False
+
+
+def ensure_parent_directory(path: str | Path) -> Path:
+    try:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+    except Exception as e:
+        raise e

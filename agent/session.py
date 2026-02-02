@@ -5,6 +5,7 @@ from tools.registry import create_default_registry
 from datetime import datetime
 import uuid
 
+
 class Session:
     def __init__(self, config: Config):
         self.config = config
