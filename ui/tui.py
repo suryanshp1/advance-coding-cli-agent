@@ -82,6 +82,7 @@ class TUI:
             "write_file": ["path", "create_directories", "content"],
             "edit_file": ["path", "replace_all", "old_string", "new_string"],
             "apply_patch": ["path", "edits"],
+            "shell": ["command", "timeout", "cwd"],
         }
 
         preferred_order = _PREFERRED_ORDER.get(tool_name, [])
@@ -238,6 +239,7 @@ class TUI:
         metadata: dict[str, Any] | None,
         diff: str | None,
         truncated: bool,
+        exit_code: int | None,
     ) -> None:
         border_style = f"tool.{tool_kind}" if tool_kind else "tool"
         status_icon = "✓" if success else "✗"
@@ -249,6 +251,8 @@ class TUI:
             ("  ", "muted"),
             (f"#{call_id[:8]}", "muted"),
         )
+
+        args = self._tool_args_by_call_id.get(call_id, {})
 
         primary_path = None
         blocks = []
@@ -306,6 +310,28 @@ class TUI:
                 diff_text, self.config.model_name, self._max_block_tokens
             )
             blocks.append(Syntax(diff_display, "diff", theme="monokai", word_wrap=True))
+
+        elif name == "shell" and success:
+            command = args.get("command", "")
+            if isinstance(command, str) and command.strip():
+                blocks.append(Text(f"$ {command.strip()}", style="muted"))
+
+            if exit_code is not None:
+                blocks.append(Text(f"exit_code={exit_code}", style="muted"))
+
+            output_display = truncate_text(
+                output,
+                self.config.model_name,
+                self._max_block_tokens,
+            )
+            blocks.append(
+                Syntax(
+                    output_display,
+                    "text",
+                    theme="monokai",
+                    word_wrap=True,
+                )
+            )
 
         if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))

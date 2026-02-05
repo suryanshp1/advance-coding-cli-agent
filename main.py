@@ -99,10 +99,11 @@ class CLI:
                     tool_kind,
                     event.data.get("success", False),
                     event.data.get("output", ""),
-                    event.data.get("error", None),
-                    event.data.get("metadata", None),
-                    event.data.get("diff", None),
+                    event.data.get("error"),
+                    event.data.get("metadata"),
+                    event.data.get("diff"),
                     event.data.get("truncated", False),
+                    event.data.get("exit_code"),
                 )
 
         return final_response

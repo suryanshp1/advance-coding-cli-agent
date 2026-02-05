@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 from dataclasses import dataclass, field
 from pathlib import Path
+from config.config import Config
 
 
 class ToolKind(str, Enum):
@@ -59,6 +60,7 @@ class ToolResult:
     metadata: dict[str, Any] = field(default_factory=dict)
     truncated: bool = False
     diff: FileDiff | None = None
+    exit_code: int | None = None
 
     @classmethod
     def error_result(cls, error: str, output: str = "", **kwargs: Any):
@@ -86,8 +88,8 @@ class Tool(ABC):
     description: str = "base tool"
     kind: ToolKind = ToolKind.READ
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, config: Config) -> None:
+        self.config = config
 
     @property
     def schema(self) -> dict[str, Any] | type["BaseModel"]:
