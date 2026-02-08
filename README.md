@@ -27,6 +27,10 @@ A powerful, terminal-based AI coding assistant designed to help developers write
     ```bash
     pip install -r requirements.txt
     ```
+4. **Format code (black formatter):**
+    ```bash
+    black .
+    ```
 
 ## Configuration
 

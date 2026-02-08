@@ -5,6 +5,7 @@ from tools.builtin.apply_patch import ApplyPatchTool
 from tools.builtin.shell import ShellTool
 from tools.builtin.list_dir import ListDirTool
 from tools.builtin.grep import GrepTool
+from tools.builtin.glob import GlobTool
 from tools.base import Tool
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "ShellTool",
     "ListDirTool",
     "GrepTool",
+    "GlobTool",
 ]
 
 
@@ -27,4 +29,5 @@ def get_all_builtin_tools() -> list[type[Tool]]:
         ShellTool,
         ListDirTool,
         GrepTool,
+        GlobTool,
     ]
