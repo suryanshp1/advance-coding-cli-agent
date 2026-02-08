@@ -45,7 +45,7 @@ class GlobTool(Tool):
                 rel_path = file_path
 
             output_lines.append(str(rel_path))
-            
+
         if len(matches) > 1000:
             output_lines.append("... (limited to 1000 results)")
         return ToolResult.success_result(
