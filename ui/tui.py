@@ -4,6 +4,8 @@ from rich.rule import Rule
 from rich.text import Text
 from rich.panel import Panel
 from rich.table import Table
+from rich.live import Live
+from rich.markdown import Markdown
 from typing import Any, Tuple
 from pathlib import Path
 from utils.paths import display_path_rel_to_cwd
@@ -60,19 +62,44 @@ class TUI:
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.cwd = self.config.cwd
         self._max_block_tokens = 2500
+        self._live: Live | None = None
+        self._assistant_buffer: str = ""
 
     def begin_assistant(self) -> None:
         self.console.print()
         self.console.print(Rule(Text("Assistant", style="assistant")))
         self._assitant_stream_open = True
+        self._assistant_buffer = ""
+        self._live = Live(
+            Markdown(""),
+            console=self.console,
+            refresh_per_second=12,
+            vertical_overflow="visible",
+        )
+        self._live.start()
 
     def end_assistant(self) -> None:
+        if self._live:
+            self._live.stop()
+            self._live = None
+
+        if self._assistant_buffer:
+            # Re-print the final markdown to ensure it persists correctly if Live didn't leave it perfectly
+            # Or just trust Live(..., transient=False) which is default.
+            # Use console.print to ensure a newline after the block
+            pass
+
         if self._assitant_stream_open:
             self.console.print()
         self._assitant_stream_open = False
 
     def stream_assistant_delta(self, content: str) -> None:
-        self.console.print(content, end="", markup=False)
+        self._assistant_buffer += content
+        if self._live:
+            self._live.update(Markdown(self._assistant_buffer))
+        else:
+            # Fallback if live is not started for some reason
+            self.console.print(content, end="", markup=False)
 
     def _ordered_args(
         self, tool_name: str, args: dict[str, Any]
@@ -86,6 +113,8 @@ class TUI:
             "list_dir": ["path", "include_hidden"],
             "grep": ["path", "case_insensitive", "pattern"],
             "glob": ["path", "pattern"],
+            "todos": ["id", "action", "content"],
+            "memory": ["action", "key", "value"],
         }
 
         preferred_order = _PREFERRED_ORDER.get(tool_name, [])
@@ -473,6 +502,90 @@ class TUI:
                     word_wrap=True,
                 )
             )
+
+        elif name == "todos" and success:
+            action = args.get("action")
+            summary = []
+            if isinstance(action, str):
+                summary.append(action)
+                if action == "add" and args.get("content"):
+                    summary.append(
+                        f"'{truncate_text(args['content'], self.config.model_name, 30)}'"
+                    )
+                elif action == "complete" and args.get("id"):
+                    summary.append(f"#{args['id']}")
+
+            if summary:
+                blocks.append(Text(" • ".join(summary), style="muted"))
+
+            todos = metadata.get("todos")
+            if todos:
+                table = Table(
+                    box=box.ROUNDED, show_header=True, header_style="bold cyan"
+                )
+                table.add_column("ID", style="dim", no_wrap=True)
+                table.add_column("Task", style="white")
+                for todo_id, content in todos.items():
+                    table.add_row(todo_id, content)
+                blocks.append(table)
+            else:
+                # If no todos in metadata (legacy or empty), fall back to text output or message
+                if output.strip() == "No todos found":
+                    blocks.append(Text("No todos", style="muted"))
+                else:
+                    output_display = truncate_text(
+                        output,
+                        self.config.model_name,
+                        self._max_block_tokens,
+                    )
+                    blocks.append(
+                        Syntax(
+                            output_display,
+                            "text",
+                            theme="monokai",
+                            word_wrap=True,
+                        )
+                    )
+        elif name == "memory" and success:
+            action = args.get("action")
+            key = args.get("key")
+            found = metadata.get("found")
+
+            summary = []
+            if isinstance(action, str) and action:
+                summary.append(action)
+            if isinstance(key, str):
+                summary.append(key)
+            if isinstance(found, bool):
+                summary.append("found" if found else "missing")
+
+            if summary:
+                blocks.append(Text(" • ".join(summary), style="muted"))
+
+            entries = metadata.get("entries")
+            if action == "list" and entries:
+                table = Table(
+                    box=box.ROUNDED, show_header=True, header_style="bold green"
+                )
+                table.add_column("Key", style="dim", no_wrap=True)
+                table.add_column("Value", style="white")
+                for key, value in entries.items():
+                    table.add_row(key, value)
+                blocks.append(table)
+            else:
+                output_display = truncate_text(
+                    output,
+                    self.config.model_name,
+                    self._max_block_tokens,
+                )
+                blocks.append(
+                    Syntax(
+                        output_display,
+                        "text",
+                        theme="monokai",
+                        word_wrap=True,
+                    )
+                )
 
         if error and not success:
             blocks.append(

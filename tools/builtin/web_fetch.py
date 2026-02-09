@@ -19,7 +19,7 @@ class WebFetchParams(BaseModel):
 class WebFetchTool(Tool):
     name = "web_fetch"
     description = "Fetch content from a given URL. Returns the response body as text."
-    kind = ToolKind.READ
+    kind = ToolKind.NETWORK
     schema = WebFetchParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:

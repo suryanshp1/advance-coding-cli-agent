@@ -16,7 +16,7 @@ class WebSearchParams(BaseModel):
 class WebSearchTool(Tool):
     name = "web_search"
     description = "Search the web for information. Returns search results with titles, URLs and snippets."
-    kind = ToolKind.READ
+    kind = ToolKind.NETWORK
     schema = WebSearchParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
