@@ -297,13 +297,12 @@ class TUI:
 
         if name == "read_file" and success:
             if primary_path:
+                code = None
+                start_line = 1
                 extracted = self._extract_read_file_code(output)
                 if extracted:
                     start_line, code = extracted
-                shown_start = None
-                shown_end = None
-                total_lines = None
-
+                
                 shown_start = metadata.get("shown_start")
                 shown_end = metadata.get("shown_end")
                 total_lines = metadata.get("total_lines")
@@ -319,16 +318,29 @@ class TUI:
 
                 header = "".join(header_parts)
                 blocks.append(Text(header, style="muted"))
-                blocks.append(
-                    Syntax(
-                        code,
-                        programming_language,
-                        theme="monokai",
-                        line_numbers=True,
-                        start_line=start_line,
-                        word_wrap=False,
+                
+                if code:
+                    blocks.append(
+                        Syntax(
+                            code,
+                            programming_language,
+                            theme="monokai",
+                            line_numbers=True,
+                            start_line=start_line,
+                            word_wrap=False,
+                        )
                     )
-                )
+                else:
+                    # Fallback if extraction failed
+                    output_display = truncate_text(output, "", self._max_block_tokens)
+                    blocks.append(
+                        Syntax(
+                            output_display,
+                            "text",
+                            theme="monokai",
+                            word_wrap=False,
+                        )
+                    )
             else:
                 output_display = truncate_text(output, "", self._max_block_tokens)
                 blocks.append(
@@ -587,13 +599,15 @@ class TUI:
                     )
                 )
 
-        if error and not success:
-            blocks.append(
-                Text(
-                    error,
-                    style="error",
-                ),
-            )
+        else:
+            if error and not success:
+                blocks.append(
+                    Text(
+                        error,
+                        style="error",
+                    ),
+                )
+            
             output_display = truncate_text(
                 output, self.config.model_name, self._max_block_tokens
             )

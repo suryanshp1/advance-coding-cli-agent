@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from pathlib import Path
-from typing import List
+from typing import List, Any
 import os
 from dotenv import load_dotenv
 
@@ -27,6 +27,10 @@ class Config(BaseModel):
 
     max_turns: int = 100
     max_tool_output_tokens: int = 50_000
+    allowed_tools: list[str] | None = Field(
+        None,
+        description="if this value is set, then only these tools will be allowed to agent",
+    )
 
     developer_instructions: str | None = None
     user_instructions: str | None = None
@@ -69,3 +73,6 @@ class Config(BaseModel):
         if not self.cwd.exists():
             errors.append(f"CWD does not exist: {self.cwd}")
         return errors
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump()
