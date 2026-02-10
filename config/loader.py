@@ -1,6 +1,7 @@
 from pathlib import Path
 from platformdirs import user_config_dir, user_data_dir
 from config.config import Config
+from config.subagent_config import SubAgentConfig
 from tomli import TOMLDecodeError
 from utils.errors import ConfigError
 from typing import Any
@@ -40,6 +41,31 @@ def _parse_toml(path: Path):
             f"Failed to read TOML config file {path} | Invalid TOML | {e}",
             config_file=str(path),
         ) from e
+
+
+def _validate_and_parse_subagents(subagents_data: list[dict[str, Any]]) -> list[SubAgentConfig]:
+    """Validate and parse subagent configurations from TOML
+    
+    Args:
+        subagents_data: List of raw subagent dictionaries from TOML
+        
+    Returns:
+        List of validated SubAgentConfig objects
+    """
+    validated_subagents: list[SubAgentConfig] = []
+    
+    for idx, subagent_dict in enumerate(subagents_data):
+        try:
+            # Pydantic will handle all validation
+            subagent_config = SubAgentConfig(**subagent_dict)
+            validated_subagents.append(subagent_config)
+            logger.info(f"Loaded custom subagent: {subagent_config.name}")
+        except Exception as e:
+            logger.warning(
+                f"Skipping invalid subagent configuration at index {idx}: {e}"
+            )
+    
+    return validated_subagents
 
 
 def _get_agent_md_files(cwd: Path) -> Path | None:
@@ -107,6 +133,15 @@ def load_config(cwd: Path | None) -> Config:
     if "developer_instructions" not in config_dict:
         if agent_md_content := _get_agent_md_files(cwd):
             config_dict["developer_instructions"] = agent_md_content
+    
+    # Process subagent configurations if present
+    if "subagents" in config_dict:
+        subagents_data = config_dict.get("subagents", [])
+        if isinstance(subagents_data, list):
+            config_dict["subagents"] = _validate_and_parse_subagents(subagents_data)
+        else:
+            logger.warning("Invalid 'subagents' section in config (expected array), ignoring")
+            config_dict["subagents"] = []
 
     try:
         config = Config(**config_dict)

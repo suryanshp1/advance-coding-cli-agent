@@ -78,11 +78,34 @@ class ToolRegistry:
 
 
 def create_default_registry(config: Config) -> ToolRegistry:
+    """Create and populate the default tool registry with built-in tools and subagents
+    
+    Args:
+        config: Configuration object containing tool settings and custom subagents
+        
+    Returns:
+        ToolRegistry: Fully populated registry with built-in and custom tools
+    """
     registry = ToolRegistry(config=config)
+    
+    # Register all built-in tools (file operations, shell commands, etc.)
     for tool_class in get_all_builtin_tools():
         registry.register(tool_class(config=config))
 
+    # Register default (hardcoded) subagents for backward compatibility
     for subagent_def in get_default_subagent_definitions():
         registry.register(SubAgentTool(config=config, definition=subagent_def))
+    
+    # Register custom subagents from config.toml
+    for subagent_config in config.subagents:
+        try:
+            definition = subagent_config.to_definition()
+            registry.register(SubAgentTool(config=config, definition=definition))
+            logger.info(f"Registered custom subagent: subagent_{definition.name}")
+        except Exception as e:
+            logger.error(
+                f"Failed to register custom subagent '{subagent_config.name}': {e}"
+            )
+            # Continue loading other subagents - don't let one failure break everything
 
     return registry

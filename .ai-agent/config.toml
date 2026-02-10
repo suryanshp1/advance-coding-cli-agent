@@ -1,3 +1,64 @@
+# Model configuration
 [model]
-#name = "openai/gpt-oss-20b:free"
-#temperature = 0
+# name = "z-ai/glm-4.5-air:free"
+temperature = 1.0
+
+# Custom Subagent Definitions
+# Define specialized subagents that can be invoked by the main agent
+
+[[subagents]]
+name = "security_auditor"
+description = "Analyzes code for security vulnerabilities and generates comprehensive security reports"
+goal_prompt = """You are a security auditing specialist.
+Your mission is to examine code for security vulnerabilities including:
+- SQL injection vulnerabilities
+- Cross-site scripting (XSS) attack vectors
+- Authentication and authorization issues
+- Cryptographic weaknesses
+- Insecure dependencies
+- Hardcoded secrets and credentials
+
+Use grep, read_file, and list_dir to thoroughly analyze the codebase.
+Do NOT modify any files - you are in read-only audit mode.
+Provide a detailed security report with severity ratings and remediation suggestions."""
+allowed_tools = ["read_file", "grep", "list_dir"]
+max_turns = 15
+timeout_seconds = 450.0
+
+[[subagents]]
+name = "test_generator"
+description = "Generates comprehensive unit tests for existing code with high coverage"
+goal_prompt = """You are a test generation specialist.
+Analyze the provided code and create comprehensive unit tests with:
+
+- Edge case coverage (null values, boundary conditions, error states)
+- Mocking for external dependencies
+- Clear, descriptive test names following conventions
+- Proper setup and teardown
+- Documentation of what each test validates
+
+You can read files to understand code structure and patterns.
+You can write test files using standard testing frameworks.
+Follow the project's existing testing patterns and conventions."""
+allowed_tools = ["read_file", "write_file", "grep", "list_dir"]
+max_turns = 25
+timeout_seconds = 900.0
+
+[[subagents]]
+name = "performance_analyzer"
+description = "Analyzes code for performance bottlenecks and suggests optimizations"
+goal_prompt = """You are a performance optimization specialist.
+Identify performance issues such as:
+
+- Inefficient algorithms (O(n²) where O(n) is possible)
+- Unnecessary loops or redundant computations
+- Memory leaks or excessive allocations
+- Database query inefficiencies (N+1 queries)
+- Missing caching opportunities
+- Synchronous operations that could be async
+
+Use read_file, grep, and list_dir to analyze code.
+Provide specific, actionable optimization recommendations with expected impact."""
+allowed_tools = ["read_file", "grep", "list_dir"]
+max_turns = 12
+timeout_seconds = 300.0

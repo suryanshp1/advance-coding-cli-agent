@@ -7,6 +7,7 @@ A powerful, terminal-based AI coding assistant designed to help developers write
 -   **Interactive TUI**: A rich, interactive terminal interface for continuous pair programming sessions.
 -   **CLI Mode**: Execute single instructions directly from the command line.
 -   **Tool Integration**: Capable of reading files, listing directories, and executing other agentic actions (extensible).
+-   **Custom Subagents**: Define specialized AI subagents via configuration files for tasks like security auditing, test generation, and code analysis.
 -   **Configurable**: Easy configuration via environment variables and TOML files.
 
 ## Installation
@@ -61,6 +62,32 @@ To run a specific prompt and exit:
 ```bash
 python main.py "Analyze the current directory and list all Python files"
 ```
+
+## Custom Subagents
+
+The agent supports **dynamic subagent registration** via configuration files. Define specialized subagents for specific tasks without modifying code.
+
+### Quick Example
+
+Create `.ai-agent/config.toml` in your project:
+
+```toml
+[[subagents]]
+name = "security_auditor"
+description = "Analyzes code for security vulnerabilities"
+goal_prompt = """You are a security specialist.
+Examine code for SQL injection, XSS, auth issues, etc."""
+allowed_tools = ["read_file", "grep", "list_dir"]
+max_turns = 15
+timeout_seconds = 450.0
+```
+
+The main agent can then invoke your custom subagent:
+```
+Use subagent_security_auditor to audit the authentication module
+```
+
+**📚 For detailed documentation**, see [SUBAGENT_GUIDE.md](SUBAGENT_GUIDE.md)
 
 ## Project Structure
 

@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Import after load_dotenv to ensure proper initialization
+from config.subagent_config import SubAgentConfig
+
 
 class ModelConfig(BaseModel):
     name: str = "z-ai/glm-4.5-air:free"
@@ -38,6 +41,11 @@ class Config(BaseModel):
     debug: bool = False
     shell_environment: ShellEnvironmentPolicy = Field(
         default_factory=ShellEnvironmentPolicy
+    )
+    
+    subagents: list[SubAgentConfig] = Field(
+        default_factory=list,
+        description="Custom subagent definitions loaded from config.toml"
     )
 
     @property
