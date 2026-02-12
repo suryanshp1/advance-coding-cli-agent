@@ -43,17 +43,19 @@ def _parse_toml(path: Path):
         ) from e
 
 
-def _validate_and_parse_subagents(subagents_data: list[dict[str, Any]]) -> list[SubAgentConfig]:
+def _validate_and_parse_subagents(
+    subagents_data: list[dict[str, Any]],
+) -> list[SubAgentConfig]:
     """Validate and parse subagent configurations from TOML
-    
+
     Args:
         subagents_data: List of raw subagent dictionaries from TOML
-        
+
     Returns:
         List of validated SubAgentConfig objects
     """
     validated_subagents: list[SubAgentConfig] = []
-    
+
     for idx, subagent_dict in enumerate(subagents_data):
         try:
             # Pydantic will handle all validation
@@ -64,7 +66,7 @@ def _validate_and_parse_subagents(subagents_data: list[dict[str, Any]]) -> list[
             logger.warning(
                 f"Skipping invalid subagent configuration at index {idx}: {e}"
             )
-    
+
     return validated_subagents
 
 
@@ -133,14 +135,16 @@ def load_config(cwd: Path | None) -> Config:
     if "developer_instructions" not in config_dict:
         if agent_md_content := _get_agent_md_files(cwd):
             config_dict["developer_instructions"] = agent_md_content
-    
+
     # Process subagent configurations if present
     if "subagents" in config_dict:
         subagents_data = config_dict.get("subagents", [])
         if isinstance(subagents_data, list):
             config_dict["subagents"] = _validate_and_parse_subagents(subagents_data)
         else:
-            logger.warning("Invalid 'subagents' section in config (expected array), ignoring")
+            logger.warning(
+                "Invalid 'subagents' section in config (expected array), ignoring"
+            )
             config_dict["subagents"] = []
 
     try:

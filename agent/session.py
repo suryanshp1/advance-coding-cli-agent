@@ -2,6 +2,7 @@ from config.config import Config
 from client.llm_client import LLMClient
 from context.contextmanager import ContextManager
 from tools.registry import create_default_registry
+from tools.discovery import ToolDiscoveryManager
 from datetime import datetime
 from config.loader import get_data_dir
 from tools.base import Tool
@@ -19,10 +20,15 @@ class Session:
             user_memory=self._load_memory(),
             tools=self.tool_registry.get_tools(),
         )
+        self.discovery_manager = ToolDiscoveryManager(
+            config=config,
+            registry=self.tool_registry,
+        )
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
 
+        self.discovery_manager.discover_all()
         self.turn_count = 0
 
     def _load_memory(self) -> str | None:

@@ -42,10 +42,10 @@ class Config(BaseModel):
     shell_environment: ShellEnvironmentPolicy = Field(
         default_factory=ShellEnvironmentPolicy
     )
-    
+
     subagents: list[SubAgentConfig] = Field(
         default_factory=list,
-        description="Custom subagent definitions loaded from config.toml"
+        description="Custom subagent definitions loaded from config.toml",
     )
 
     @property

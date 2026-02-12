@@ -302,7 +302,7 @@ class TUI:
                 extracted = self._extract_read_file_code(output)
                 if extracted:
                     start_line, code = extracted
-                
+
                 shown_start = metadata.get("shown_start")
                 shown_end = metadata.get("shown_end")
                 total_lines = metadata.get("total_lines")
@@ -318,7 +318,7 @@ class TUI:
 
                 header = "".join(header_parts)
                 blocks.append(Text(header, style="muted"))
-                
+
                 if code:
                     blocks.append(
                         Syntax(
@@ -607,7 +607,7 @@ class TUI:
                         style="error",
                     ),
                 )
-            
+
             output_display = truncate_text(
                 output, self.config.model_name, self._max_block_tokens
             )
