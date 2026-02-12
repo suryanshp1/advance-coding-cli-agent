@@ -39,10 +39,14 @@ class MCPManager:
             for name, client in self._clients.items()
         ]
 
-        await asyncio.gather(
+        results = await asyncio.gather(
             *connection_tasks,
             return_exceptions=True,
         )
+
+        for result in results:
+            if isinstance(result, Exception):
+                print(f"MCP Connection Error: {result}")
 
         self._initialized = True
 
@@ -63,3 +67,9 @@ class MCPManager:
                 count += 1
 
         return count
+
+    async def shutdown(self) -> None:
+        disconnect_tasks = [client.disconnect() for client in self._clients.values()]
+        await asyncio.gather(*disconnect_tasks, return_exceptions=True)
+        self._clients.clear()
+        self._initialized = False

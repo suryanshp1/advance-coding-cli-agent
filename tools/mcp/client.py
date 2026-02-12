@@ -65,12 +65,17 @@ class MCPClient:
 
             for tool in tool_result:
 
+                # robustly check for input schema in snake_case or camelCase
+                schema = {}
+                if hasattr(tool, "inputSchema"):
+                    schema = tool.inputSchema
+                elif hasattr(tool, "input_schema"):
+                    schema = tool.input_schema
+                
                 self._tools[tool.name] = MCPToolInfo(
                     name=tool.name,
                     description=tool.description or "",
-                    input_schema=(
-                        tool.input_schema if hasattr(tool, "inputSchema") else {}
-                    ),
+                    input_schema=schema,
                     server_name=self.name,
                 )
 
