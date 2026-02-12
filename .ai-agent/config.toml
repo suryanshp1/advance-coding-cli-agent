@@ -62,3 +62,11 @@ Provide specific, actionable optimization recommendations with expected impact."
 allowed_tools = ["read_file", "grep", "list_dir"]
 max_turns = 12
 timeout_seconds = 300.0
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/Users/surajpandey/Documents/Python/coding-agent-py", "/tmp"]
+
+[mcp_servers.filesystem1]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/Users/surajpandey/Documents/Python/coding-agent-py", "/tmp"]
