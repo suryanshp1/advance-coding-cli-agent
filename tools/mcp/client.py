@@ -64,6 +64,7 @@ class MCPClient:
             tool_result = await self._client.list_tools()
 
             for tool in tool_result:
+
                 self._tools[tool.name] = MCPToolInfo(
                     name=tool.name,
                     description=tool.description or "",
