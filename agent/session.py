@@ -1,6 +1,7 @@
 from config.config import Config
 from client.llm_client import LLMClient
 from context.contextmanager import ContextManager
+from context.compaction import ChatCompactor
 from tools.registry import create_default_registry
 from tools.discovery import ToolDiscoveryManager
 from datetime import datetime
@@ -25,6 +26,7 @@ class Session:
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
+        self.chat_compactor = ChatCompactor(self.llm_client)
 
         self.turn_count = 0
 

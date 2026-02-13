@@ -71,7 +71,7 @@ class MCPClient:
                     schema = tool.inputSchema
                 elif hasattr(tool, "input_schema"):
                     schema = tool.input_schema
-                
+
                 self._tools[tool.name] = MCPToolInfo(
                     name=tool.name,
                     description=tool.description or "",
