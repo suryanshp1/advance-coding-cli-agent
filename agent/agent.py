@@ -106,6 +106,8 @@ class Agent:
                 if usage:
                     self.session.context_manager.set_latest_usage(usage)
                     self.session.context_manager.add_usage(usage)
+
+                self.session.context_manager.prune_old_tool_results()
                 return
 
             tool_call_results: list[ToolResultMessage] = []
@@ -145,6 +147,8 @@ class Agent:
             if usage:
                 self.session.context_manager.set_latest_usage(usage)
                 self.session.context_manager.add_usage(usage)
+
+            self.session.context_manager.prune_old_tool_results()
 
         yield AgentEvent.agent_error(f"Max turns reached: {self.config.max_turns}")
 

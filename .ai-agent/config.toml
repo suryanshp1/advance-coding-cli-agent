@@ -2,7 +2,7 @@
 [model]
 # name = "z-ai/glm-4.5-air:free"
 # temperature = 1.0
-context_window = 10000
+# context_window = 10000
 
 # Custom Subagent Definitions
 # Define specialized subagents that can be invoked by the main agent
