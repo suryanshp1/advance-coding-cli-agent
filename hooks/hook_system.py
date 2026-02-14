@@ -11,6 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class HookSystem:
     def __init__(self, config: Config):
         self.config = config
@@ -25,7 +26,9 @@ class HookSystem:
                 await self._run_command(hook.command, hook.timeout_sec, env)
             else:
                 # .sh
-                with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False) as f:
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".sh", delete=False
+                ) as f:
                     f.write("#!/bin/bash\n")  # shebang
                     f.write(hook.script)
                     script_path = f.name

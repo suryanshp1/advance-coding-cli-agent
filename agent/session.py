@@ -10,6 +10,7 @@ from tools.base import Tool
 from tools.mcp.manager import MCPManager
 from safety.approval import ApprovalManager
 from hooks.hook_system import HookSystem
+from context.loop_detector import LoopDetector
 import json
 import uuid
 
@@ -34,6 +35,7 @@ class Session:
             self.config.cwd,
         )
         self.hook_system = HookSystem(config=self.config)
+        self.loop_detector = LoopDetector()
         self.turn_count = 0
 
     async def initialize(self) -> None:

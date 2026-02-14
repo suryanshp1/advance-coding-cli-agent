@@ -19,6 +19,8 @@ class AgentEventType(str, Enum):
     TOOL_CALL_START = "tool_call_start"
     TOOL_CALL_COMPLETE = "tool_call_complete"
 
+    LOOP_DETECTED = "loop_detected"
+
 
 @dataclass
 class AgentEvent:
