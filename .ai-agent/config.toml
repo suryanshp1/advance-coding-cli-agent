@@ -1,7 +1,9 @@
+hooks_enabled = true
+
 # Model configuration
 [model]
 # name = "z-ai/glm-4.5-air:free"
-# temperature = 1.0
+temperature = 0
 # context_window = 10000
 
 # Custom Subagent Definitions
@@ -71,3 +73,13 @@ timeout_seconds = 300.0
 # [mcp_servers.filesystem1]
 # command = "npx"
 # args = ["-y", "@modelcontextprotocol/server-filesystem", "/Users/surajpandey/Documents/Python/coding-agent-py", "/tmp"]
+
+[[hooks]]
+name='test_before_tool'
+trigger='before_tool'
+command='python3 ./scripts/test_tool.py'
+
+[[hooks]]
+name='test_before_agent'
+trigger='before_agent'
+command='python3 ./scripts/test_tool.py'

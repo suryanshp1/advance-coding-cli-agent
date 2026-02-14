@@ -9,6 +9,7 @@ from config.loader import get_data_dir
 from tools.base import Tool
 from tools.mcp.manager import MCPManager
 from safety.approval import ApprovalManager
+from hooks.hook_system import HookSystem
 import json
 import uuid
 
@@ -32,6 +33,7 @@ class Session:
             self.config.approval,
             self.config.cwd,
         )
+        self.hook_system = HookSystem(config=self.config)
         self.turn_count = 0
 
     async def initialize(self) -> None:

@@ -10,3 +10,4 @@ dist/
 user_data/
 brain/
 artifacts/
+*.log
