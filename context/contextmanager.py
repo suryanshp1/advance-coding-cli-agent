@@ -156,7 +156,7 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
         user_message_count = sum(1 for m in self._messages if m.role == "user")
         if user_message_count < 2:
             return 0
-        
+
         total_tokens = 0
         pruned_tokens = 0
         to_prune: list[MessageItem] = []

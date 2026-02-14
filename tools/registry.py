@@ -6,6 +6,7 @@ from tools.base import Tool, ToolResult, ToolInvocation
 from tools.builtin import get_all_builtin_tools, ReadFileTool
 from tools.subagents import get_default_subagent_definitions, SubAgentTool
 from config.config import Config
+from safety.approval import ApprovalManager, ApprovalContext, ApprovalDecision
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,13 @@ class ToolRegistry:
     def get_schemas(self) -> List[dict[str, Any]]:
         return [tool.to_openai_schema() for tool in self.get_tools()]
 
-    async def invoke(self, name: str, params: dict[str, Any], cwd: Path) -> ToolResult:
+    async def invoke(
+        self,
+        name: str,
+        params: dict[str, Any],
+        cwd: Path,
+        approval_manager: ApprovalManager | None = None,
+    ) -> ToolResult:
         tool = self.get(name)
         if tool is None:
             return ToolResult.error_result(
@@ -81,6 +88,30 @@ class ToolRegistry:
             )
 
         invocation = ToolInvocation(params=params, cwd=cwd)
+        if approval_manager:
+            confirmation = await tool.get_confirmation(invocation)
+            if confirmation:
+                context = ApprovalContext(
+                    tool_name=name,
+                    params=params,
+                    is_mutating=tool.is_mutating(params=params),
+                    is_dangerous=confirmation.is_dangerous,
+                    affected_paths=confirmation.affected_paths,
+                    command=confirmation.command,
+                )
+                decision = await approval_manager.check_approval(context=context)
+                if decision == ApprovalDecision.REJECTED:
+                    return ToolResult.error_result(
+                        f"Operation denied by safety policy: {decision.reason}",
+                        metadata={"tool_name": name, "reason": decision.reason},
+                    )
+                elif decision == ApprovalDecision.NEEDS_CONFIRMATION:
+                    approve = approval_manager.request_confirmation(confirmation=confirmation)
+                    if not approve:
+                        return ToolResult.error_result(
+                            "User rejected the operation",
+                            metadata={"tool_name": name},
+                        )
         try:
             result = await tool.execute(invocation=invocation)
             return result

@@ -8,6 +8,7 @@ from datetime import datetime
 from config.loader import get_data_dir
 from tools.base import Tool
 from tools.mcp.manager import MCPManager
+from safety.approval import ApprovalManager
 import json
 import uuid
 
@@ -27,7 +28,10 @@ class Session:
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
         self.chat_compactor = ChatCompactor(self.llm_client)
-
+        self.approval_manager = ApprovalManager(
+            self.config.approval,
+            self.config.cwd,
+        )
         self.turn_count = 0
 
     async def initialize(self) -> None:

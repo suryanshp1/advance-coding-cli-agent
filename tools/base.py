@@ -81,6 +81,10 @@ class ToolConfirmation:
     tool_name: str
     params: dict[str, Any]
     description: str
+    diff: FileDiff | None = None
+    command: str | None = None
+    affected_paths: list[str] = field(default_factory=list)
+    is_dangerous: bool = False
 
 
 class Tool(ABC):
@@ -130,7 +134,7 @@ class Tool(ABC):
         if not self.is_mutating(invocation.params):
             return None
 
-        return await ToolConfirmation(
+        return ToolConfirmation(
             tool_name=self.name,
             params=invocation.params,
             description=f"Execute {self.name}",

@@ -1,5 +1,7 @@
 from tools.base import Tool, ToolKind, ToolInvocation, ToolResult
 from pydantic import BaseModel, Field
+from tools.base import ToolConfirmation, FileDiff
+from utils.paths import resolve_path
 from pathlib import Path
 import fnmatch
 import asyncio
@@ -40,6 +42,29 @@ class ShellTool(Tool):
     kind = ToolKind.SHELL
     description = "Execute a shell command. Use this for running system commands, scripts, or any terminal-based operations."
     schema = ShellParams
+
+    async def get_confirmation(
+        self, invocation: ToolInvocation
+    ) -> ToolConfirmation | None:
+        params = ShellParams(**invocation.params)
+
+        for blocked in BLOCKED_COMMANDS:
+            if blocked in params.command:
+                return ToolConfirmation(
+                    tool_name=self.name,
+                    params=invocation.params,
+                    description=f"Execute (BLOCKED): {params.command}",
+                    is_dangerous=True,
+                    command=params.command,
+                )
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"Execute: {params.command}",
+            command=params.command,
+            is_dangerous=False,
+        )
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ShellParams(**invocation.params)

@@ -7,15 +7,24 @@ from client.response import ToolCall, ToolResultMessage
 from agent.session import Session
 from client.response import TokenUsage
 from pathlib import Path
-
-
+from typing import Callable
+from tools.base import ToolConfirmation
 from config.config import Config
 
 
 class Agent:
-    def __init__(self, config: Config | None = None):
+    def __init__(
+        self,
+        config: Config | None = None,
+        confirmation_callback: (
+            Callable[[ToolConfirmation], bool] | None
+        ) = None,
+    ):
         self.config = config
         self.session: Session | None = Session(config)
+        self.session.approval_manager.confirmation_callback = (
+            confirmation_callback
+        )
 
     async def run(self, message: str):
         yield AgentEvent.agent_start(message)
@@ -107,7 +116,7 @@ class Agent:
                     self.session.context_manager.set_latest_usage(usage)
                     self.session.context_manager.add_usage(usage)
 
-                self.session.context_manager.prune_old_tool_results()
+                self.session.context_manager.prune_tool_outputs()
                 return
 
             tool_call_results: list[ToolResultMessage] = []
@@ -122,6 +131,7 @@ class Agent:
                     tool_call.name,
                     tool_call.arguments,
                     self.config.cwd,
+                    self.session.approval_manager,
                 )
 
                 yield AgentEvent.tool_call_complete(
@@ -148,7 +158,7 @@ class Agent:
                 self.session.context_manager.set_latest_usage(usage)
                 self.session.context_manager.add_usage(usage)
 
-            self.session.context_manager.prune_old_tool_results()
+            self.session.context_manager.prune_tool_outputs()
 
         yield AgentEvent.agent_error(f"Max turns reached: {self.config.max_turns}")
 

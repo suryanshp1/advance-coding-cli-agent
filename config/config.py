@@ -2,6 +2,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, model_validator
 from pathlib import Path
 from typing import List, Any
+from enum import Enum
 import os
 from dotenv import load_dotenv
 
@@ -53,6 +54,15 @@ class MCPServerConfig(BaseModel):
         return self
 
 
+class ApprovalPolicy(str, Enum):
+    ON_REQUEST = "on_request"
+    ON_FAILURE = "on_failure"
+    AUTO = "auto"
+    AUTO_EDIT = "auto_edit"
+    NEVER = "never"
+    YOLO = "yolo"
+
+
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory=ModelConfig)
     cwd: Path = Field(default_factory=Path.cwd)
@@ -81,6 +91,8 @@ class Config(BaseModel):
         default_factory=dict,
         description="MCP servers definitions",
     )
+
+    approval: ApprovalPolicy = ApprovalPolicy.ON_REQUEST
 
     @property
     def api_key(self) -> str | None:

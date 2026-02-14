@@ -34,7 +34,10 @@ class CLI:
                 "commands: /exit /help /config /approval /model",
             ],
         )
-        async with Agent(config=self.config) as agent:
+        async with Agent(
+            config=self.config,
+            confirmation_callback=self.tui.handle_confirmation,
+        ) as agent:
             self.agent = agent
 
             while True:
@@ -125,10 +128,6 @@ def main(prompt: str | None = None, cwd: Path | None = None):
     except ConfigError as e:
         console.print(f"[error]Error: {e}[/error]")
         sys.exit(1)
-
-    # messages=[
-    #     {"role": "user", "content": prompt}
-    # ]
 
     errors = config.validate()
     if errors:
