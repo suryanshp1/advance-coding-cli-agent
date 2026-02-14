@@ -42,12 +42,16 @@ class CLI:
 
             while True:
                 try:
-                    message = console.input("\n[user]>[/user] ").strip()
-                    if not message:
+                    user_input = console.input("\n[user]>[/user] ").strip()
+                    if not user_input:
                         continue
-                    if message == "/exit":
-                        break
-                    await self._process_message(message)
+                    if user_input.startswith("/"):
+                        should_continue = self._handle_command(user_input)
+                        if not should_continue:
+                            break
+                        continue
+
+                    await self._process_message(user_input)
                 except KeyboardInterrupt:
                     console.print("\n[dim]Use /exit to quit.[/dim]")
                 except EOFError:
@@ -110,6 +114,25 @@ class CLI:
                 )
 
         return final_response
+
+    def _handle_command(self, command: str) -> bool:
+        cmd = command.lower().strip()
+        parts = command.split(maxsplit=1)
+        cmd_name = parts[0]
+        cmd_args = parts[1] if len(parts) > 1 else ""
+
+        if cmd_name in ("/exit", "/quit", "/q"):
+            return False
+        elif command in ("/help", "/h"):
+            self.tui.show_help()
+        elif command == "/clear":
+            self.agent.session.context_manager.clear()
+            self.agent.session.loop_detector.clear()
+            console.print("[success]Conversation cleared.[/success]")
+        else:
+            console.print(f"[error]Unknown command: {cmd_name}[/error]")
+
+        return True
 
 
 @click.command()
