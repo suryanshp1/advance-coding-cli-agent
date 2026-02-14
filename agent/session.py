@@ -11,6 +11,7 @@ from tools.mcp.manager import MCPManager
 from safety.approval import ApprovalManager
 from hooks.hook_system import HookSystem
 from context.loop_detector import LoopDetector
+from typing import Any
 import json
 import uuid
 
@@ -79,3 +80,15 @@ class Session:
         self.updated_at = datetime.now()
 
         return self.turn_count
+
+    def get_stats(self) -> dict[str, Any]:
+        return {
+            "session_id": self.session_id,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "turn_count": self.turn_count,
+            "message_count": self.context_manager.message_count,
+            "token_usage": self.context_manager.total_token_usage,
+            "tools_count": self.tool_registry.tool_count,
+            "mcp_tools_count": self.tool_registry.mcp_tool_count,
+        }

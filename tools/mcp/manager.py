@@ -12,6 +12,17 @@ class MCPManager:
         self._clients: dict[str, MCPClient] = dict()
         self._initialized: bool = False
 
+    @property
+    def get_all_servers(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "name": client.name,
+                "status": client.status.value,
+                "tools_count": len(client.tools),
+            }
+            for client in self._clients.values()
+        ]
+
     async def initialize(self) -> None:
         if self._initialized:
             return

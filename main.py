@@ -8,7 +8,7 @@ from agent.events import AgentEventType
 from ui.tui import get_console
 from pathlib import Path
 from config.loader import load_config
-from config.config import Config
+from config.config import Config, ApprovalPolicy
 from utils.errors import ConfigError
 
 console = get_console()
@@ -129,6 +129,73 @@ class CLI:
             self.agent.session.context_manager.clear()
             self.agent.session.loop_detector.clear()
             console.print("[success]Conversation cleared.[/success]")
+        elif command == "/config":
+            console.print("\n[bold]Current Configuration[/bold]")
+            console.print(f"  Model: {self.config.model_name}")
+            console.print(f"  Temperature: {self.config.temperature}")
+            console.print(f"  Approval: {self.config.approval.value}")
+            console.print(f"  Working Dir: {self.config.cwd}")
+            console.print(f"  Max Turns: {self.config.max_turns}")
+            console.print(f"  Hooks Enabled: {self.config.hooks_enabled}")
+        elif cmd_name == "/model":
+            if cmd_args:
+                self.config.model_name = cmd_args
+                console.print(f"[success]Model changed to {self.config.model_name}[/success]")
+            else:
+                console.print(f"[info]Current model: {self.config.model_name}[/info]")
+        elif cmd_name == "/approval":
+            if cmd_args:
+                try:
+                    approval = ApprovalPolicy(cmd_args)
+                    self.config.approval = approval
+                    console.print(f"[success]Approval policy changed to {self.config.approval.value}[/success]")
+                except:
+                    console.print(f"[error]Invalid approval policy: {cmd_args}[/error]")
+                    console.print("Valid policies are: ", [policy.value for policy in ApprovalPolicy])
+            else:
+                console.print(f"[info]Current approval policy: {self.config.approval.value}[/info]")
+        elif cmd_name == "/temperature":
+            if cmd_args:
+                self.config.temperature = float(cmd_args)
+                console.print(f"[success]Temperature changed to {self.config.temperature}[/success]")
+            else:
+                console.print(f"[info]Current temperature: {self.config.temperature}[/info]")
+        elif cmd_name == "/max_turns":
+            if cmd_args:
+                self.config.max_turns = int(cmd_args)
+                console.print(f"[success]Max turns changed to {self.config.max_turns}[/success]")
+            else:
+                console.print(f"[info]Current max turns: {self.config.max_turns}[/info]")
+        elif cmd_name == "/hooks":
+            if cmd_args:
+                self.config.hooks_enabled = cmd_args.lower() in ("true", "1", "t")
+                console.print(f"[success]Hooks enabled: {self.config.hooks_enabled}[/success]")
+            else:
+                console.print(f"[info]Current hooks enabled: {self.config.hooks_enabled}[/info]")
+        elif cmd_name == "/stats":
+            stats = self.agent.session.get_stats()
+            console.print(f"[bold]Session Stats[/bold]")
+            console.print(f"  Turn Count: {stats['turn_count']}")
+            console.print(f"  Message Count: {stats['message_count']}")
+            console.print(f"  Token Usage: {stats['token_usage']}")
+            console.print(f"  Tools Count: {stats['tools_count']}")
+            console.print(f"  MCP Tools Count: {stats['mcp_tools_count']}")
+            console.print(f"  Session ID: {stats['session_id']}")
+            console.print(f"  Created At: {stats['created_at']}")
+            console.print(f"  Updated At: {stats['updated_at']}")
+        elif cmd_name == "/tools":
+            tools = self.agent.session.tool_registry.get_tools()
+            console.print(f"[bold]Tools ({len(tools)})[/bold]")
+            for tool in tools:
+                console.print(f"  • {tool.name}: {tool.description}\n")
+        elif cmd_name == "/mcp":
+            mcp_servers = self.agent.session.mcp_manager.get_all_servers
+            console.print(f"[bold]MCP Servers ({len(mcp_servers)})[/bold]")
+            for server in mcp_servers:
+                status_color = "green" if server["status"] == "connected" else "red"
+                console.print(f"  • {server['name']}: [{status_color}]{server['status']}[/{status_color}]: {server['tools_count']} tools\n")
+        elif cmd_name == "/save":
+            pass
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
 

@@ -18,6 +18,14 @@ class ToolRegistry:
         self._mcp_tools: dict[str, Tool] = {}
         self.config = config
 
+    @property
+    def tool_count(self) -> int:
+        return len(self._tools)
+
+    @property
+    def mcp_tool_count(self) -> int:
+        return len(self._mcp_tools)
+
     def register(self, tool: Tool) -> None:
         if tool.name in self._tools:
             logger.warning(
