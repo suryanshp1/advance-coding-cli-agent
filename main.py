@@ -140,7 +140,9 @@ class CLI:
         elif cmd_name == "/model":
             if cmd_args:
                 self.config.model_name = cmd_args
-                console.print(f"[success]Model changed to {self.config.model_name}[/success]")
+                console.print(
+                    f"[success]Model changed to {self.config.model_name}[/success]"
+                )
             else:
                 console.print(f"[info]Current model: {self.config.model_name}[/info]")
         elif cmd_name == "/approval":
@@ -148,30 +150,49 @@ class CLI:
                 try:
                     approval = ApprovalPolicy(cmd_args)
                     self.config.approval = approval
-                    console.print(f"[success]Approval policy changed to {self.config.approval.value}[/success]")
+                    console.print(
+                        f"[success]Approval policy changed to {self.config.approval.value}[/success]"
+                    )
                 except:
                     console.print(f"[error]Invalid approval policy: {cmd_args}[/error]")
-                    console.print("Valid policies are: ", [policy.value for policy in ApprovalPolicy])
+                    console.print(
+                        "Valid policies are: ",
+                        [policy.value for policy in ApprovalPolicy],
+                    )
             else:
-                console.print(f"[info]Current approval policy: {self.config.approval.value}[/info]")
+                console.print(
+                    f"[info]Current approval policy: {self.config.approval.value}[/info]"
+                )
         elif cmd_name == "/temperature":
             if cmd_args:
                 self.config.temperature = float(cmd_args)
-                console.print(f"[success]Temperature changed to {self.config.temperature}[/success]")
+                console.print(
+                    f"[success]Temperature changed to {self.config.temperature}[/success]"
+                )
             else:
-                console.print(f"[info]Current temperature: {self.config.temperature}[/info]")
+                console.print(
+                    f"[info]Current temperature: {self.config.temperature}[/info]"
+                )
         elif cmd_name == "/max_turns":
             if cmd_args:
                 self.config.max_turns = int(cmd_args)
-                console.print(f"[success]Max turns changed to {self.config.max_turns}[/success]")
+                console.print(
+                    f"[success]Max turns changed to {self.config.max_turns}[/success]"
+                )
             else:
-                console.print(f"[info]Current max turns: {self.config.max_turns}[/info]")
+                console.print(
+                    f"[info]Current max turns: {self.config.max_turns}[/info]"
+                )
         elif cmd_name == "/hooks":
             if cmd_args:
                 self.config.hooks_enabled = cmd_args.lower() in ("true", "1", "t")
-                console.print(f"[success]Hooks enabled: {self.config.hooks_enabled}[/success]")
+                console.print(
+                    f"[success]Hooks enabled: {self.config.hooks_enabled}[/success]"
+                )
             else:
-                console.print(f"[info]Current hooks enabled: {self.config.hooks_enabled}[/info]")
+                console.print(
+                    f"[info]Current hooks enabled: {self.config.hooks_enabled}[/info]"
+                )
         elif cmd_name == "/stats":
             stats = self.agent.session.get_stats()
             console.print(f"[bold]Session Stats[/bold]")
@@ -193,7 +214,9 @@ class CLI:
             console.print(f"[bold]MCP Servers ({len(mcp_servers)})[/bold]")
             for server in mcp_servers:
                 status_color = "green" if server["status"] == "connected" else "red"
-                console.print(f"  • {server['name']}: [{status_color}]{server['status']}[/{status_color}]: {server['tools_count']} tools\n")
+                console.print(
+                    f"  • {server['name']}: [{status_color}]{server['status']}[/{status_color}]: {server['tools_count']} tools\n"
+                )
         elif cmd_name == "/save":
             pass
         else:
