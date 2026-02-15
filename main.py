@@ -281,6 +281,67 @@ class CLI:
                 console.print(
                     f"[success]Session resumed: {session_snapshot.session_id}[/success]"
                 )
+
+        elif cmd_name == "/checkpoint":
+            persistence_manager = PersistenceManager()
+            session_snapshot = SessionSnapshot(
+                session_id=self.agent.session.session_id,
+                created_at=self.agent.session.created_at,
+                updated_at=self.agent.session.updated_at,
+                turn_count=self.agent.session.turn_count,
+                messages=self.agent.session.context_manager.get_messages(),
+                total_usage=self.agent.session.context_manager.total_token_usage,
+            )
+            checkpoint_id = persistence_manager.save_checkpoint(session_snapshot)
+            console.print(f"[success]Checkpoint created: {checkpoint_id}[/success]")
+        elif cmd_name == "/checkpoints":
+            persistence_manager = PersistenceManager()
+            checkpoints = persistence_manager.list_checkpoints(self.agent.session.session_id)
+            console.print(f"[bold]Checkpoints ({len(checkpoints)})[/bold]")
+            for checkpoint in checkpoints:
+                console.print(f"  • {checkpoint}")
+
+        elif cmd_name == "/restore":
+            persistence_manager = PersistenceManager()
+            if not cmd_args:
+                console.print("[error]Checkpoint ID is required[/error]")
+                console.print("Usage: /restore <checkpoint_id>")
+                return False
+            session_snapshot = persistence_manager.load_checkpoint(cmd_args)
+            if not session_snapshot:
+                console.print("[error]Checkpoint not found[/error]")
+            else:
+                session = Session(
+                    config=self.config,
+                )
+                await session.initialize()
+                session.session_id = session_snapshot.session_id
+                session.created_at = session_snapshot.created_at
+                session.updated_at = session_snapshot.updated_at
+                session.turn_count = session_snapshot.turn_count
+                session.context_manager.total_token_usage = session_snapshot.total_usage
+                for msg in session_snapshot.messages:
+                    if msg.get("role") == "system":
+                        continue
+                    elif msg.get("role") == "user":
+                        session.context_manager.add_user_message(msg.get("content", ""))
+                    elif msg.get("role") == "assistant":
+                        session.context_manager.add_assistant_message(
+                            msg.get("content", ""), msg.get("tool_calls", [])
+                        )
+                    elif msg.get("role") == "tool":
+                        session.context_manager.add_tool_result(
+                            msg.get("tool_call_id", ""), msg.get("content", "")
+                        )
+
+                await self.agent.session.llm_client.close()
+                await self.agent.session.mcp_manager.shutdown()
+                self.agent.session = session
+
+                console.print(
+                    f"[success]Checkpoint restored: {cmd_args}[/success]"
+                )
+
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
 

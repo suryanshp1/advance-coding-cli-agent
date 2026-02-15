@@ -44,7 +44,10 @@ class PersistenceManager:
         self.data_dir = get_data_dir()
         self.sessions_dir = self.data_dir / "sessions"
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
+        self.checkpoints_dir = self.data_dir / "checkpoints"
+        self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(str(self.sessions_dir), 0o700)
+        os.chmod(str(self.checkpoints_dir), 0o700)
 
     def save_session(self, snapshot: SessionSnapshot) -> None:
         file_path = self.sessions_dir / f"{snapshot.session_id}.json"
@@ -77,3 +80,39 @@ class PersistenceManager:
             )
         sessions.sort(key=lambda x: x["updated_at"], reverse=True)
         return sessions
+
+    def save_checkpoint(self, snapshot: SessionSnapshot) -> str:
+        checkpoint_id = (
+            f"{snapshot.session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+        file_path = self.checkpoints_dir / f"{checkpoint_id}.json"
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(snapshot.to_dict(), f, indent=2)
+        os.chmod(str(file_path), 0o600)
+        return checkpoint_id
+
+    def load_checkpoint(self, checkpoint_id: str) -> SessionSnapshot | None:
+        file_path = self.checkpoints_dir / f"{checkpoint_id}.json"
+        if not file_path.exists():
+            return None
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        return SessionSnapshot.from_dict(data)
+
+    def list_checkpoints(self, session_id: str) -> list[str]:
+        checkpoints = []
+        for file_path in self.checkpoints_dir.glob(f"{session_id}_*.json"):
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            checkpoints.append(
+                {
+                    "session_id": data["session_id"],
+                    "created_at": data["created_at"],
+                    "updated_at": data["updated_at"],
+                    "turn_count": data["turn_count"],
+                    "total_usage": data["total_usage"],
+                }
+            )
+        checkpoints.sort(key=lambda x: x["updated_at"], reverse=True)
+        return checkpoints
