@@ -60,6 +60,10 @@ class ContextManager:
     def total_token_usage(self) -> TokenUsage:
         return self._total_usage
 
+    @total_token_usage.setter
+    def total_token_usage(self, usage: TokenUsage) -> None:
+        self._total_usage = usage
+
     def add_user_message(self, content: str) -> None:
         item = MessageItem(
             role="user",

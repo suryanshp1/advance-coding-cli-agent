@@ -10,6 +10,8 @@ from pathlib import Path
 from config.loader import load_config
 from config.config import Config, ApprovalPolicy
 from utils.errors import ConfigError
+from agent.persistence import PersistenceManager, SessionSnapshot
+from agent.session import Session
 
 console = get_console()
 
@@ -46,7 +48,7 @@ class CLI:
                     if not user_input:
                         continue
                     if user_input.startswith("/"):
-                        should_continue = self._handle_command(user_input)
+                        should_continue = await self._handle_command(user_input)
                         if not should_continue:
                             break
                         continue
@@ -115,7 +117,7 @@ class CLI:
 
         return final_response
 
-    def _handle_command(self, command: str) -> bool:
+    async def _handle_command(self, command: str) -> bool:
         cmd = command.lower().strip()
         parts = command.split(maxsplit=1)
         cmd_name = parts[0]
@@ -218,7 +220,67 @@ class CLI:
                     f"  • {server['name']}: [{status_color}]{server['status']}[/{status_color}]: {server['tools_count']} tools\n"
                 )
         elif cmd_name == "/save":
-            pass
+            persistence_manager = PersistenceManager()
+            session_snapshot = SessionSnapshot(
+                session_id=self.agent.session.session_id,
+                created_at=self.agent.session.created_at,
+                updated_at=self.agent.session.updated_at,
+                turn_count=self.agent.session.turn_count,
+                messages=self.agent.session.context_manager.get_messages(),
+                total_usage=self.agent.session.context_manager.total_token_usage,
+            )
+            persistence_manager.save_session(session_snapshot)
+            console.print(
+                f"[success]Session saved: {session_snapshot.session_id}[/success]"
+            )
+        elif cmd_name == "/sessions":
+            persistence_manager = PersistenceManager()
+            sessions = persistence_manager.list_sessions()
+            console.print(f"[bold]Saved sessions ({len(sessions)})[/bold]")
+            for session in sessions:
+                console.print(f"  • {session}")
+        elif cmd_name == "/resume":
+            if not cmd_args:
+                console.print("[error]Session ID is required[/error]")
+                console.print("Usage: /resume <session_id>")
+                return False
+
+            persistence_manager = PersistenceManager()
+            session_snapshot = persistence_manager.load_session(cmd_args)
+            if not session_snapshot:
+                console.print("[error]Session not found[/error]")
+            else:
+
+                session = Session(
+                    config=self.config,
+                )
+                await session.initialize()
+                session.session_id = session_snapshot.session_id
+                session.created_at = session_snapshot.created_at
+                session.updated_at = session_snapshot.updated_at
+                session.turn_count = session_snapshot.turn_count
+                session.context_manager.total_token_usage = session_snapshot.total_usage
+                for msg in session_snapshot.messages:
+                    if msg.get("role") == "system":
+                        continue
+                    elif msg.get("role") == "user":
+                        session.context_manager.add_user_message(msg.get("content", ""))
+                    elif msg.get("role") == "assistant":
+                        session.context_manager.add_assistant_message(
+                            msg.get("content", ""), msg.get("tool_calls", [])
+                        )
+                    elif msg.get("role") == "tool":
+                        session.context_manager.add_tool_result(
+                            msg.get("tool_call_id", ""), msg.get("content", "")
+                        )
+
+                await self.agent.session.llm_client.close()
+                await self.agent.session.mcp_manager.shutdown()
+                self.agent.session = session
+
+                console.print(
+                    f"[success]Session resumed: {session_snapshot.session_id}[/success]"
+                )
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
 
