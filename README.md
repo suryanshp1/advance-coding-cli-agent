@@ -146,6 +146,34 @@ allowed_tools = ["read_file", "write_file", "run_command"]
 Invoke them in the chat:
 > "Ask the qa_engineer to write tests for this module."
 
+## Architecture
+
+```mermaid
+graph TD
+    User([User]) -->|Interacts| UI[Terminal UI]
+    User -->|CLI Command| CLI[CLI Mode]
+    UI --> Main[main.py]
+    CLI --> Main
+    
+    Main --> Config[Config Loader]
+    Main --> Session[Session Manager]
+    
+    Session --> EventLoop[Event Loop]
+    EventLoop --> Agent[Core Agent]
+    
+    Agent --> Client[LLM API Client]
+    Client -.->|API Call| LLM[(LLM Provider)]
+    
+    Agent --> ToolsManager[Tools Manager]
+    ToolsManager --> BuiltInTools[Built-in Tools]
+    ToolsManager --> MCP[MCP Servers]
+    
+    Agent --> Subagents[Subagents Manager]
+    Subagents --> SpecializedAgent[Specialized Persona]
+    
+    EventLoop --> Hooks[Lifecycle Hooks]
+```
+
 ## Project Structure
 
 -   `main.py`: Entry point.
